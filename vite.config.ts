@@ -18,11 +18,11 @@ export default defineConfig({
   ],
   build: {
     outDir: 'hasaki-ui', //输出文件名称
-    lib: {
-      entry: fileURLToPath(new URL('./src/components/hasaki-ui/index.ts', import.meta.url)), //指定组件编译入口文件
-      name: 'hasaki-ui',
-      fileName: 'hasaki-ui'
-    }, //库编译模式配置
+    // lib: {
+    //   entry: fileURLToPath(new URL('./src/components/hasaki-ui/index.ts', import.meta.url)), //指定组件编译入口文件
+    //   name: 'hasaki-ui',
+    //   fileName: 'hasaki-ui'
+    // }, //库编译模式配置
     rollupOptions: {
       // 确保外部化处理那些你不想打包进库的依赖
       external: ['vue', 'vue-router'],
