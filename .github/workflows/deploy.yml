@@ -2,10 +2,10 @@ name: 自动部署到 GitHub Pages
 
 on:
   push:
-    branches: [ "main" ]  # 当推送到 main 分支时触发
+    branches: [ "main" ]
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -20,22 +20,44 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
 
-      - name: 设置 Node.js 环境
+      - name: 设置 Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
-          cache: 'pnpm'
+          node-version: 22  # 或 20
+          # 注意：这里不直接缓存 pnpm，因为需要先有 pnpm 命令
 
+      # 核心步骤2：安装并设置 pnpm
+      - name: 安装 pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9  # 指定 pnpm 版本，可换成 8 或 latest
+          run_install: false  # 先不自动安装，我们手动控制
+
+      # 核心步骤3：获取 pnpm 存储路径并设置缓存 (加速后续构建)
+      - name: 获取 pnpm 存储路径
+        id: pnpm-cache
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: 设置 pnpm 缓存
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      # 核心步骤4：安装依赖并构建
       - name: 安装依赖
-        run: pnpm ci
+        run: pnpm install --frozen-lockfile  # 根据 lock 文件精确安装
 
       - name: 构建项目
         run: pnpm run build
 
+      # 核心步骤5：部署到 GitHub Pages
       - name: 上传构建产物
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./dist  # Vue 项目默认的构建输出目录
+          path: ./hasaki-ui/  # 替换为你的实际构建输出目录
 
       - name: 部署到 GitHub Pages
         id: deployment
